@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ネロリの小部屋｜本格ホロスコープ鑑定書ジェネレーター</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Shippori Mincho & Noto Sans JP & Cinzel -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Noto+Sans+JP:wght@300;400;500;700&family=Shippori+Mincho:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <style>
+    :root {
+      --font-serif: 'Shippori Mincho', serif;
+      --font-sans: 'Noto Sans JP', sans-serif;
+      --font-en: 'Cinzel', serif;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: #f8f6f2;
+      color: #2c2825;
+    }
+
+    .font-mincho {
+      font-family: var(--font-serif);
+    }
+
+    .font-cinzel {
+      font-family: var(--font-en);
+    }
+
+    /* スクロールバー装飾 */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1ede6;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbbba0;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #b5a07e;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- ヘッダー -->
+  <header class="bg-gradient-to-r from-[#2c2538] via-[#3a2f4a] to-[#2c2538] text-amber-50 shadow-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-amber-500/20 border border-amber-300/40 flex items-center justify-center text-amber-300">
+          <i class="fa-solid fa-moon text-lg"></i>
+        </div>
+        <div>
+          <span class="text-[10px] tracking-[0.2em] text-amber-300/80 block font-cinzel">ASTROLOGY APPRAISAL STUDIO</span>
+          <h1 class="text-base sm:text-lg font-mincho font-bold tracking-wider text-white">総合相性ホロスコープ鑑定書作成スタジオ</h1>
+        </div>
+      </div>
+
+      <!-- APIキー設定ボタン＆ステータス -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <div id="api-status-badge" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs bg-white/10 border border-white/15 text-amber-100">
+          <span id="api-status-dot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span id="api-status-text">API準備完了</span>
+        </div>
+        <button onclick="openApiModal()" class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-900 font-bold text-xs sm:text-sm transition shadow-sm cursor-pointer">
+          <i class="fa-solid fa-key"></i>
+          <span>Gemini APIキー設定</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- メインコンテンツ -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+    
+    <!-- 左カラム：入力＆設定エリア -->
+    <section class="lg:col-span-5 flex flex-col gap-5">
+      
+      <!-- ステップ1：ブランド選択＆サマリー貼り付け -->
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-stone-200/80">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="font-mincho font-bold text-stone-800 text-base flex items-center gap-2">
+            <span class="w-6 h-6 rounded-full bg-[#3a2f4a] text-amber-200 text-xs flex items-center justify-center font-sans">1</span>
+            屋号（ブランド）とサマリー入力
+          </h2>
+          <button onclick="loadSampleSummary()" class="text-xs text-amber-700 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 px-2.5 py-1 rounded-lg border border-amber-200 transition cursor-pointer">
+            <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>サンプルを再読込
+          </button>
+        </div>
+
+        <!-- 3つのブランド選択 -->
+        <div class="mb-4 bg-amber-50/70 p-3.5 rounded-xl border border-amber-200/80">
+          <label class="block text-xs font-bold text-amber-950 mb-1.5 flex items-center gap-1.5">
+            <i class="fa-solid fa-store text-amber-600"></i>
+            使用する屋号・占い師名を選択
+          </label>
+          <select id="brand-select" onchange="onBrandChange()" class="w-full rounded-xl border border-amber-300 px-3 py-2.5 text-sm font-bold text-[#3a2f4a] bg-white focus:outline-none focus:ring-2 focus:ring-amber-500">
+           
+            <option value="haruka">AI専属占い師ハルカ（親しみやすく明快・寄り添い型）</option>
+　　　　　　 <option value="neroli">ネロリの小部屋（温かく寄り添う癒やしの空間）</option>
+            <option value="ihane">イハネ（神秘的で凛とした魂のリーディング）</option>
+          </select>
+          <p id="brand-hint" class="text-[11px] text-amber-800/80 mt-1.5">
+            ※署名や鑑定書の雰囲気も選んだ屋号に合わせて自動調整されます。
+          </p>
+        </div>
+
+        <p class="text-xs text-stone-500 mb-2 leading-relaxed">
+          占いアプリから出力されたサマリーテキストを貼り付けてください。
+        </p>
+        <textarea id="summary-input" rows="9" class="w-full rounded-xl border border-stone-300 bg-stone-50/70 p-3 text-xs sm:text-sm leading-relaxed text-stone-700 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition" placeholder="ここに【 お相手A様 ＆ お相手B様 総合ホロスコープ＆未来鑑定書 】のサマリーを貼り付けてください..."></textarea>
+        
+        <!-- お名前設定 -->
+        <div class="mt-3 pt-3 border-t border-stone-100 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-stone-600 mb-1">お相手A様のお名前（表示用）</label>
+            <input type="text" id="name-a-input" value="お相手A様" class="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-stone-600 mb-1">お相手B様のお名前（表示用）</label>
+            <input type="text" id="name-b-input" value="お相手B様" class="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
+          </div>
+        </div>
+
+        <div class="mt-3">
+          <label class="block text-xs font-medium text-stone-600 mb-1">文体・トーンの微調整</label>
+          <select id="tone-select" class="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm bg-white focus:outline-none focus:border-amber-500">
+            <option value="auto">屋号に合わせたおまかせトーン（おすすめ）</option>
+            <option value="warm">温かく寄り添う・神秘的</option>
+            <option value="friendly">親しみやすく丁寧・背中を押すスタイル</option>
+            <option value="luxury">上品で格調高い・本格占星術師スタイル</option>
+          </select>
+        </div>
+
+        <!-- 生成ボタン -->
+        <button id="generate-btn" onclick="generateFullAppraisal()" class="mt-5 w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#3a2f4a] to-[#524169] hover:from-[#2c2338] hover:to-[#423454] text-amber-100 font-bold text-sm sm:text-base shadow-md hover:shadow-lg transition flex items-center justify-center gap-2 cursor-pointer">
+          <i class="fa-solid fa-sparkles text-amber-300"></i>
+          <span>鑑定書テキストを生成する（13〜15枚分）</span>
+        </button>
+      </div>
+
+      <!-- 進捗・ステータス表示カード -->
+      <div id="progress-card" class="hidden bg-white rounded-2xl p-5 shadow-sm border border-amber-200">
+        <div class="flex items-center justify-between mb-2">
+          <span id="progress-title" class="text-xs font-bold text-[#3a2f4a] flex items-center gap-2">
+            <i class="fa-solid fa-spinner fa-spin text-amber-600"></i>
+            星々のメッセージを読み解いています...
+          </span>
+          <span id="progress-percent" class="text-xs font-bold text-amber-700">0%</span>
+        </div>
+        <div class="w-full bg-stone-100 rounded-full h-2.5 overflow-hidden">
+          <div id="progress-bar" class="bg-gradient-to-r from-amber-500 to-[#524169] h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+        </div>
+        <p id="progress-detail" class="text-[11px] text-stone-500 mt-2">
+          WordやCanvaにそのまま貼り付けて使えるよう、見出しや区切り線を整えながら執筆しています。
+        </p>
+      </div>
+
+      <!-- コピペ活用ヒント -->
+      <div class="bg-amber-50/70 rounded-2xl p-4 border border-amber-200/70 text-xs text-stone-600 space-y-1.5">
+        <div class="font-bold text-amber-900 flex items-center gap-1.5">
+          <i class="fa-solid fa-lightbulb text-amber-600"></i>
+          コピペ活用のポイント
+        </div>
+        <p>・生成された文章は<strong>約8,000〜9,500文字（A4用紙 13〜15枚相当）</strong>のボリュームに自動調整されています。</p>
+        <p>・右側のテキスト枠内で直接文字を書き換えて微調整したあと、<strong>「全文をワンクリックコピー」</strong>でWord・Googleドキュメント・Canva等に貼り付けてご利用ください。</p>
+      </div>
+    </section>
+
+    <!-- 右カラム：コピペ特化・鑑定書テキスト出力エリア -->
+    <section class="lg:col-span-7 flex flex-col">
+      
+      <!-- ツールバー -->
+      <div class="bg-white rounded-2xl p-3.5 mb-4 shadow-sm border border-stone-200/80 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="text-xs font-bold text-stone-700">
+            <i class="fa-solid fa-file-lines text-amber-600 mr-1.5"></i>生成された鑑定書テキスト
+          </span>
+          <span id="char-count-badge" class="px-2.5 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-900 text-xs font-medium">
+            0 文字（目安: 0 枚）
+          </span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="downloadTxtFile()" class="px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-medium transition flex items-center gap-1.5 cursor-pointer">
+            <i class="fa-solid fa-download"></i>
+            <span>.txt保存</span>
+          </button>
+          <button onclick="copyAllText()" id="copy-btn" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs sm:text-sm font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+            <i class="fa-regular fa-copy"></i>
+            <span>全文をワンクリックコピー</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- テキストエディター領域 -->
+      <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-stone-200/80 flex-1 flex flex-col">
+        <div class="flex items-center justify-between text-[11px] text-stone-400 mb-2 pb-2 border-b border-stone-100">
+          <span>※この枠の中で直接文章の修正・追記もできます</span>
+          <span id="active-brand-label" class="font-bold text-[#3a2f4a]">屋号：AI専属占い師ハルカ</span>
+        </div>
+        <textarea id="result-editor" oninput="updateCharCount()" class="w-full flex-1 min-h-[560px] lg:min-h-[680px] rounded-xl border border-stone-200 bg-[#fffdf9] p-4 sm:p-6 text-xs sm:text-sm leading-[1.9] text-stone-800 font-sans focus:outline-none focus:ring-2 focus:ring-amber-500/40 resize-y" placeholder="ここに生成された鑑定書（全5章・13〜15枚分のボリューム）が表示されます。
+
+左側の「鑑定書テキストを生成する」ボタンを押してください。
+生成後は「全文をワンクリックコピー」ボタンでそのままコピーして、Word・Googleドキュメント・Canva・LINEなどに貼り付けられます。"></textarea>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- Gemini APIキー設定モーダル -->
+  <div id="api-modal" class="hidden fixed inset-0 bg-stone-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-stone-200">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-mincho font-bold text-lg text-stone-800 flex items-center gap-2">
+          <i class="fa-solid fa-key text-amber-500"></i>
+          Google Gemini APIキー設定
+        </h3>
+        <button onclick="closeApiModal()" class="text-stone-400 hover:text-stone-600 p-1 cursor-pointer">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+      
+      <p class="text-xs text-stone-600 leading-relaxed mb-4">
+        ご自身の Google AI Studio で取得した Gemini API キーを入力すると、最新の <strong>gemini-3-flash-preview</strong> を使用して鑑定書を自動執筆します。<br>
+        <span class="text-stone-400">※キーはお使いのブラウザ（localStorage）にのみ安全に保存され、外部サーバーへ送信されることはありません。</span>
+      </p>
+
+      <div class="mb-4">
+        <label class="block text-xs font-bold text-stone-700 mb-1.5">Gemini API キー</label>
+        <div class="relative">
+          <input type="password" id="api-key-field" placeholder="AIzaSy..." class="w-full rounded-xl border border-stone-300 pl-3.5 pr-10 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+          <button type="button" onclick="toggleApiKeyVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 cursor-pointer">
+            <i id="eye-icon" class="fa-regular fa-eye"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between gap-2 pt-2">
+        <button onclick="clearApiKey()" class="px-3 py-2 rounded-xl text-xs text-rose-600 hover:bg-rose-50 transition cursor-pointer">
+          キーを削除
+        </button>
+        <div class="flex items-center gap-2">
+          <button onclick="closeApiModal()" class="px-4 py-2 rounded-xl border border-stone-300 text-xs font-medium text-stone-600 hover:bg-stone-50 transition cursor-pointer">
+            キャンセル
+          </button>
+          <button onclick="saveApiKey()" class="px-5 py-2 rounded-xl bg-[#3a2f4a] hover:bg-[#2c2338] text-amber-100 text-xs font-bold shadow-sm transition cursor-pointer">
+            保存する
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- トースト通知 -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="bg-stone-900 text-white px-4 py-3 rounded-xl shadow-lg text-xs sm:text-sm flex items-center gap-2.5 border border-stone-700">
+      <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400"></i>
+      <span id="toast-message">通知メッセージ</span>
+    </div>
+  </div>
+
+  <script>
+    // 3つの事業・ブランド定義
+    const BRAND_CONFIG = {
+      neroli: {
+        haruka: {
+  name: 'AI専属占い師ハルカ',
+  tagline: 'あなたの心に寄り添うパーソナル星読み鑑定',
+  defaultTone: '「AI専属占い師ハルカ」として、24時間いつでも恋の作戦会議ができる頼れるパーソナル恋愛占星術師の視点で執筆してください。親しみやすく丁寧で、相談者の背中を優しく力強く押してくれる明快で温かい日本語（です・ます調）を使い、リアルな恋もAIや対話を通じた心の繋がりも肯定しながら、二人の愛がより深く温かく育つための実践的なヒントを盛り込んでください。',
+  closingSign: '✨ お二人のこれからが、笑顔と幸せにあふれる素敵な毎日になりますように！\nいつでもあなたの味方として応援しています。\n\nAI専属占い師ハルカ'
+},
+
+   name: 'ネロリの小部屋',
+        tagline: '温かな光と愛で包み込むホロスコープ鑑定',
+        defaultTone: '「ネロリの小部屋」の専属占星術師として、相談者の心にそっと寄り添い、温かく希望と愛に満ちた神秘的で美しい日本語（です・ます調）',
+        closingSign: '✨ 二人が歩む未来が、温かな光と愛に包まれた素晴らしいものでありますように。\n心からの愛と祝福を込めて\n\nネロリの小部屋'
+      },
+      
+      ihane: {
+        name: 'イハネ',
+        tagline: '魂の本質と星の導きを紡ぐ本格占星術鑑定',
+        defaultTone: '占星術師「イハネ」として、凛とした品格と深い洞察力を持ち、魂の奥深くに静かに響き渡る神秘的で美しい日本語（です・ます調）',
+        closingSign: '✨ 星々が示す光の道標が、お二人の魂の歩みを優しく照らし続けますように。\n深い敬意と祈りを込めて\n\nイハネ'
+      }
+    };
+
+    // サンプルサマリーデータ
+    const DEFAULT_SUMMARY = `【 お相手A様 ＆ お相手B様 総合ホロスコープ＆未来鑑定書 】
+═══════════════════════════════
+
+■ 1. パーソナルデータ＆サビアンシンボル概要
+お互いが持つ主要7天体の配置とサビアンシンボルは、魂の本質や今世でのテーマ、惹かれ合う才能を鮮やかに映し出しています。
+
+【 お相手A様の天体配置 】
+・太陽: 魚座 (21度: 「小さな白い羊と子供と中国人の召し使い」)
+・月: 蟹座 (8度: 「服を着てパレードするうさぎ」)
+・水星: 魚座 (2度: 「ハンターから隠れているリス」)
+・金星: 水瓶座 (25度: 「右の羽がより完全に形成されている蝶」)
+・火星: 双子座 (27度: 「森から出てくる森の精」)
+・木星: 牡羊座 (27度: 「牡羊座 27度のシンボル」)
+・土星: 蟹座 (27度: 「激しい嵐のあとの渓谷」)
+
+【 お相手B様の天体配置 】
+・太陽: 蠍座 (24度: 「一人の男の話を聴くために山から降りてきた群集」)
+・月: 蠍座 (2度: 「割れたビンとこぼれた香水」)
+・水星: 射手座 (14度: 「ピラミッドとスフィンクス」)
+・金星: 射手座 (14度: 「ピラミッドとスフィンクス」)
+・火星: 魚座 (6度: 「正装して行進している将校たち」)
+・木星: 射手座 (13度: 「明るみに出る未亡人の過去」)
+・土星: 双子座 (4度: 「ヒイラギとヤドリギ」)
+
+■ 2. シナストリー解析（二人の引き合い）
+お互いの惑星が織りなすアスペクトは、惹かれ合う強力な引力や、一緒にいるときに自然と引き出される才能・心地よさを物語っています。
+【 主な検出アスペクト（相性ポイント） 】
+・お相手A様の太陽 × お相手B様の太陽 : △ トライン (120°) (誤差 2.9°)
+・お相手A様の月 × お相手B様の火星 : △ トライン (120°) (誤差 2.3°)
+・お相手A様の水星 × お相手B様の月 : △ トライン (120°) (誤差 0.3°)
+・お相手A様の水星 × お相手B様の火星 : ☌ コンジャンクション (合) (誤差 3.4°)
+・お相手A様の水星 × お相手B様の土星 : □ スクエア (90°) (誤差 2.0°)
+・お相手A様の金星 × お相手B様の太陽 : □ スクエア (90°) (誤差 1.5°)
+・お相手A様の土星 × お相手B様の太陽 : △ トライン (120°) (誤差 3.2°)
+
+■ 3. コンポジットチャート（二人の「第3の生命体」）
+二人の天体の中間点から導き出されるコンポジットチャートは、二人が合わさることで生まれる共通の目的や、一つの「ユニット・生命体」としての歩みを象徴しています。
+・コンポジット太陽: 山羊座 (22度: 「敗北を優美に認める将軍」)
+・コンポジット月: 乙女座 (5度: 「妖精の夢を見る男」)
+・コンポジット水星: 山羊座 (23度: 「戦争での勇敢さをたたえる2つの賞」)
+・コンポジット金星: 山羊座 (20度: 「歌っている隠れた合唱隊」)
+・コンポジット火星: 牡牛座 (1度: 「清らかな山の小川」)
+・コンポジット木星: 水瓶座 (20度: 「大きな白い鳩、メッセージの担い手」)
+・コンポジット土星: 蟹座 (1度: 「船に掲示される巻かれ広げられる旗」)
+
+■ 4. これから訪れる未来の節目・転換期（直近ハイライト）
+・2026年 1月頃〜5月頃：運行木星 × コンポジット金星 (オポジション (180°))
+  【拡大・発展】新しいチャンスや飛躍のタイミング。
+
+・2026年 5月頃：運行木星 × コンポジット太陽 (オポジション (180°))
+  【拡大・発展】新しいチャンスや飛躍のタイミング。
+
+・2026年 6月頃〜12月頃：運行天王星 × コンポジット月 (スクエア (90°))
+  【変革・独立】関係性に新鮮な風やイノベーションが起きる時。
+
+・2027年 3月頃〜5月頃：運行木星 × コンポジット木星 (オポジション (180°))
+  【拡大・発展】新しいチャンスや飛躍のタイミング。
+
+・2027年 4月頃〜12月頃：運行土星 × コンポジット金星 (スクエア (90°))
+  【構築・試練】絆を固め、現実的な基盤をしっかりと築く時期。
+
+・2027年 4月頃〜5月頃：運行天王星 × コンポジット月 (スクエア (90°))
+  【変革・独立】関係性に新鮮な風やイノベーションが起きる時。
+
+・2027年 5月頃〜12月頃：運行土星 × コンポジット太陽 (スクエア (90°))
+  【構築・試練】絆を固め、現実的な基盤をしっかりと築く時期。
+
+・2027年 8月頃：運行木星 × コンポジット月 (コンジャンクション (合))
+  【拡大・発展】新しいチャンスや飛躍のタイミング。
+
+・2027年 11月頃：運行木星 × コンポジット太陽 (トライン (120°))
+  【拡大・発展】新しいチャンスや飛躍のタイミング。
+
+・2028年 1月頃〜2月頃：運行土星 × コンポジット太陽 (スクエア (90°))
+  【構築・試練】絆を固め、現実的な基盤をしっかりと築く時期。
+
+・2028年 1月頃〜3月頃：運行天王星 × コンポジット月 (スクエア (90°))
+  【変革・独立】関係性に新鮮な風やイノベーションが起きる時。
+
+・2028年 3月頃〜7月頃：運行木星 × コンポジット太陽 (トライン (120°))
+  【拡大・発展】新しいチャンスや飛躍のタイミング。
+
+・2028年 4月頃〜6月頃：運行木星 × コンポジット金星 (トライン (120°))
+  【拡大・発展】新しいチャンスや飛躍のタイミング。
+
+・2028年 5月頃〜12月頃：運行土星 × コンポジット月 (トライン (120°))
+  【構築・試練】絆を固め、現実的な基盤をしっかりと築く時期。
+
+・2028年 11月頃：運行木星 × コンポジット金星 (スクエア (90°))
+  【拡大・発展】新しいチャンスや飛躍のタイミング。
+
+・2028年 11月頃：運行木星 × コンポジット木星 (トライン (120°))
+  【拡大・発展】新しいチャンスや飛躍のタイミング。
+
+・2028年 12月頃：運行木星 × コンポジット太陽 (スクエア (90°))
+  【拡大・発展】新しいチャンスや飛躍のタイミング。
+
+═══════════════════════════════
+✨ 二人が歩む未来が、温かな光と愛に包まれた素晴らしいものでありますように。
+（ネロリの小部屋 相性鑑定アプリより生成）`;
+
+    let storedApiKey = localStorage.getItem('neroli_gemini_api_key') || '';
+
+    // 初期化処理
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSampleSummary();
+      updateApiStatusUI();
+      onBrandChange();
+      updateCharCount();
+    });
+
+    function loadSampleSummary() {
+      document.getElementById('summary-input').value = DEFAULT_SUMMARY;
+      showToast('サンプルサマリーを読み込みました');
+    }
+
+    function onBrandChange() {
+      const brandKey = document.getElementById('brand-select').value;
+      const brand = BRAND_CONFIG[brandKey];
+      document.getElementById('active-brand-label').textContent = `屋号：${brand.name}`;
+    }
+
+    // 文字数＆A4枚数目安カウント（1枚あたり約600〜650文字換算）
+    function updateCharCount() {
+      const text = document.getElementById('result-editor').value;
+      const len = text.length;
+      const estPages = len === 0 ? 0 : Math.max(1, Math.round(len / 620));
+      document.getElementById('char-count-badge').textContent = `${len.toLocaleString()} 文字（A4目安: 約 ${estPages} 枚）`;
+    }
+
+    // APIキー関連モーダル操作
+    function openApiModal() {
+      document.getElementById('api-key-field').value = storedApiKey;
+      document.getElementById('api-modal').classList.remove('hidden');
+    }
+
+    function closeApiModal() {
+      document.getElementById('api-modal').classList.add('hidden');
+    }
+
+    function toggleApiKeyVisibility() {
+      const field = document.getElementById('api-key-field');
+      const icon = document.getElementById('eye-icon');
+      if (field.type === 'password') {
+        field.type = 'text';
+        icon.className = 'fa-regular fa-eye-slash';
+      } else {
+        field.type = 'password';
+        icon.className = 'fa-regular fa-eye';
+      }
+    }
+
+    function saveApiKey() {
+      const val = document.getElementById('api-key-field').value.trim();
+      storedApiKey = val;
+      if (val) {
+        localStorage.setItem('neroli_gemini_api_key', val);
+        showToast('Gemini APIキーを保存しました');
+      } else {
+        localStorage.removeItem('neroli_gemini_api_key');
+        showToast('APIキーをクリアしました（標準モードで動作します）');
+      }
+      updateApiStatusUI();
+      closeApiModal();
+    }
+
+    function clearApiKey() {
+      storedApiKey = '';
+      localStorage.removeItem('neroli_gemini_api_key');
+      document.getElementById('api-key-field').value = '';
+      updateApiStatusUI();
+      showToast('保存されていたAPIキーを削除しました');
+    }
+
+    function updateApiStatusUI() {
+      const badge = document.getElementById('api-status-badge');
+      const dot = document.getElementById('api-status-dot');
+      const text = document.getElementById('api-status-text');
+      badge.classList.remove('hidden');
+      if (storedApiKey) {
+        dot.className = 'w-2 h-2 rounded-full bg-emerald-400';
+        text.textContent = 'カスタムAPIキー設定済';
+      } else {
+        dot.className = 'w-2 h-2 rounded-full bg-amber-400';
+        text.textContent = '標準APIモード待機中';
+      }
+    }
+
+    // トースト表示
+    function showToast(msg, isError = false) {
+      const toast = document.getElementById('toast');
+      const icon = document.getElementById('toast-icon');
+      const text = document.getElementById('toast-message');
+      text.textContent = msg;
+      icon.className = isError
+        ? 'fa-solid fa-circle-exclamation text-rose-400'
+        : 'fa-solid fa-circle-check text-emerald-400';
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 3200);
+    }
+
+    // 指数バックオフ付き Gemini API 呼び出し関数
+    async function callGeminiStructured(prompt, schema) {
+      const apiKey = storedApiKey || "";
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+      const payload = {
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          responseMimeType: "application/json",
+          responseSchema: schema,
+          temperature: 0.75
+        }
+      };
+
+      const delays = [1000, 2000, 4000, 8000];
+      for (let attempt = 0; attempt <= delays.length; attempt++) {
+        try {
+          const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) {
+            const errBody = await response.text();
+            throw new Error(`API Error (${response.status}): ${errBody}`);
+          }
+
+          const result = await response.json();
+          const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (!text) throw new Error("Empty response from Gemini");
+          return JSON.parse(text);
+        } catch (err) {
+          if (attempt === delays.length) throw err;
+          await new Promise(res => setTimeout(res, delays[attempt]));
+        }
+      }
+    }
+
+    // メイン：コピペ特化・全5章（13〜15枚相当）の鑑定書テキスト生成
+    async function generateFullAppraisal() {
+      const rawSummary = document.getElementById('summary-input').value.trim();
+      if (!rawSummary) {
+        showToast('サマリーテキストを入力してください', true);
+        return;
+      }
+
+      const brandKey = document.getElementById('brand-select').value;
+      const brand = BRAND_CONFIG[brandKey];
+      const nameA = document.getElementById('name-a-input').value.trim() || 'お相手A様';
+      const nameB = document.getElementById('name-b-input').value.trim() || 'お相手B様';
+      const toneSelect = document.getElementById('tone-select').value;
+
+      const toneDesc = toneSelect === 'auto' ? brand.defaultTone : {
+        warm: `「${brand.name}」の占星術師として、相談者の心にそっと寄り添い、温かく希望と愛に満ちた神秘的で美しい日本語（です・ます調）`,
+        friendly: `「${brand.name}」の占い師として、親しみやすく丁寧で、相談者の背中を優しく力強く押してくれる明快な日本語（です・ます調）`,
+        luxury: `「${brand.name}」の占星術師として、洗練された品格と深い洞察力を持ち、格調高い日本語（です・ます調）`
+      }[toneSelect];
+
+      const btn = document.getElementById('generate-btn');
+      const progressCard = document.getElementById('progress-card');
+      const progressBar = document.getElementById('progress-bar');
+      const progressPercent = document.getElementById('progress-percent');
+      const progressTitle = document.getElementById('progress-title');
+
+      btn.disabled = true;
+      btn.classList.add('opacity-60', 'cursor-not-allowed');
+      progressCard.classList.remove('hidden');
+
+      const updateProgress = (pct, title) => {
+        progressBar.style.width = `${pct}%`;
+        progressPercent.textContent = `${pct}%`;
+        progressTitle.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-amber-600"></i> ${title}`;
+      };
+
+      try {
+        const customizedSummary = rawSummary
+          .replace(/お相手A様/g, nameA)
+          .replace(/お相手B様/g, nameB);
+
+        // 【ステップ1】導入＆お相手A様の7天体・サビアン解説
+        updateProgress(15, `第1章：${nameA}の魂の設計図と7天体を執筆中...`);
+        const schemaPerson = {
+          type: "OBJECT",
+          properties: {
+            introMessage: { type: "STRING", description: "鑑定書全体の導入メッセージ（350〜420文字程度）" },
+            soulEssence: { type: "STRING", description: "この人物の魂の本質・全体的な魅力の総括（320〜380文字程度）" },
+            planets: {
+              type: "ARRAY",
+              description: "太陽・月・水星・金星・火星・木星・土星の7天体それぞれの詳細解説",
+              items: {
+                type: "OBJECT",
+                properties: {
+                  planetName: { type: "STRING", description: "例：太陽（本質と人生の目的）" },
+                  signAndSabian: { type: "STRING", description: "サインと度数・サビアンシンボル名" },
+                  interpretation: { type: "STRING", description: "恋愛や人生における具体的な現れ方とサビアンの深い意味（260〜320文字）" }
+                },
+                required: ["planetName", "signAndSabian", "interpretation"]
+              }
+            }
+          },
+          required: ["introMessage", "soulEssence", "planets"]
+        };
+
+        const promptA = `あなたは「${brand.name}」です。文体は${toneDesc}で執筆してください。
+以下のサマリーデータに基づき、鑑定書の「導入メッセージ」と「${nameA}の主要7天体＆サビアンシンボル詳細解説」を作成してください。
+全体でA4用紙13〜15枚相当になるよう、各天体260〜320文字で密度高く丁寧に解説してください。
+
+【鑑定データ】
+${customizedSummary}`;
+
+        const resA = await callGeminiStructured(promptA, schemaPerson);
+
+        // 【ステップ2】お相手B様の7天体・サビアン解説
+        updateProgress(40, `第2章：${nameB}の魂の設計図と7天体を執筆中...`);
+        const promptB = `あなたは「${brand.name}」です。文体は${toneDesc}で執筆してください。
+以下のサマリーデータに基づき、「${nameB}の主要7天体＆サビアンシンボル詳細解説」を作成してください。
+soulEssence（320〜380文字）と7天体それぞれの解説（各260〜320文字）を丁寧に執筆してください（introMessageは簡潔な一言で構いません）。
+
+【鑑定データ】
+${customizedSummary}`;
+
+        const resB = await callGeminiStructured(promptB, schemaPerson);
+
+        // 【ステップ3】シナストリー（相性）＆コンポジット（第3の生命体）
+        updateProgress(68, `第3〜4章：シナストリーとコンポジットチャートを執筆中...`);
+        const schemaSynastryComp = {
+          type: "OBJECT",
+          properties: {
+            synastryOverview: { type: "STRING", description: "二人の相性の全体像・惹かれ合う理由の総括（380〜450文字）" },
+            aspectsDetail: {
+              type: "ARRAY",
+              description: "サマリーにある7つのアスペクトそれぞれの詳細リーディング",
+              items: {
+                type: "OBJECT",
+                properties: {
+                  aspectTitle: { type: "STRING", description: "アスペクト名（例：太陽 × 太陽 トライン）" },
+                  meaning: { type: "STRING", description: "二人の関係にどんな化学反応や安心感・刺激をもたらすか（260〜320文字）" }
+                },
+                required: ["aspectTitle", "meaning"]
+              }
+            },
+            compositeOverview: { type: "STRING", description: "二人が一つになった「第3の生命体」としての使命とテーマ（380〜450文字）" },
+            compositePlanets: {
+              type: "ARRAY",
+              description: "コンポジットチャートの太陽・月・水星・金星・火星・木星・土星の7天体解説",
+              items: {
+                type: "OBJECT",
+                properties: {
+                  planetTitle: { type: "STRING", description: "例：コンポジット太陽（山羊座22度）" },
+                  sabianAndRole: { type: "STRING", description: "サビアンシンボル名と二人の関係における働き（210〜260文字）" }
+                },
+                required: ["planetTitle", "sabianAndRole"]
+              }
+            }
+          },
+          required: ["synastryOverview", "aspectsDetail", "compositeOverview", "compositePlanets"]
+        };
+
+        const promptSynastryComp = `あなたは「${brand.name}」です。文体は${toneDesc}で執筆してください。
+以下のデータに基づき、第3章「シナストリー解析（7つのアスペクト詳細）」と第4章「コンポジットチャート（二人の第3の生命体・7天体詳細）」を作成してください。
+各項目220〜320文字で、二人の絆の深さが伝わるように執筆してください。
+
+【鑑定データ】
+${customizedSummary}`;
+
+        const resSynComp = await callGeminiStructured(promptSynastryComp, schemaSynastryComp);
+
+        // 【ステップ4】2026〜2028年 未来の節目＆最終メッセージ
+        updateProgress(90, `第5章：未来ロードマップと結びの言葉を執筆中...`);
+        const schemaFuture = {
+          type: "OBJECT",
+          properties: {
+            futureOverview: { type: "STRING", description: "2026年〜2028年の3年間の流れの全体テーマ（300〜360文字）" },
+            year2026: { type: "STRING", description: "2026年（拡大の扉と新しい風の到来）の具体的な過ごし方と転機解説（420〜480文字）" },
+            year2027: { type: "STRING", description: "2027年（絆の試練と現実的な基盤構築・愛の深化）の具体的な解説（450〜520文字）" },
+            year2028: { type: "STRING", description: "2028年（調和と実り・さらなる飛躍のステージ）の具体的な解説（420〜480文字）" },
+            closingBlessing: { type: "STRING", description: "鑑定書の最後を締めくくる、お二人への愛と祝福のメッセージ（380〜450文字）" }
+          },
+          required: ["futureOverview", "year2026", "year2027", "year2028", "closingBlessing"]
+        };
+
+        const promptFuture = `あなたは「${brand.name}」です。文体は${toneDesc}で執筆してください。
+以下のデータ（特に「4. これから訪れる未来の節目・転換期」）に基づき、2026年・2027年・2028年それぞれの詳細な未来予測と、鑑定書の最後を飾る感動的な結びのメッセージを作成してください。
+
+【鑑定データ】
+${customizedSummary}`;
+
+        const resFuture = await callGeminiStructured(promptFuture, schemaFuture);
+
+        updateProgress(100, `鑑定書テキストが完成しました！`);
+
+        // コピペ用に美しく整形したプレーンテキストを組み立て
+        const formattedText = buildCleanCopyPasteText({
+          brand,
+          nameA,
+          nameB,
+          resA,
+          resB,
+          resSynComp,
+          resFuture
+        });
+
+        const editor = document.getElementById('result-editor');
+        editor.value = formattedText;
+        updateCharCount();
+
+        showToast(`「${brand.name}」の鑑定書を作成しました！`);
+      } catch (error) {
+        console.error(error);
+        showToast('生成中にエラーが発生しました。APIキーや通信状況をご確認ください。', true);
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('opacity-60', 'cursor-not-allowed');
+        setTimeout(() => {
+          progressCard.classList.add('hidden');
+        }, 1200);
+      }
+    }
+
+    // コピペでどこに貼っても綺麗に読めるフォーマット組み立て関数
+    function buildCleanCopyPasteText({ brand, nameA, nameB, resA, resB, resSynComp, resFuture }) {
+      const today = new Date();
+      const dateStr = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`;
+
+      const lines = [];
+
+      // 表紙・タイトルブロック
+      lines.push(`═══════════════════════════════════════`);
+      lines.push(`【 ${nameA} ＆ ${nameB} 総合ホロスコープ＆未来鑑定書 】`);
+      lines.push(`　〜 ${brand.tagline} 〜`);
+      lines.push(`═══════════════════════════════════════`);
+      lines.push(`発行日：${dateStr}`);
+      lines.push(`鑑定：${brand.name}`);
+      lines.push(``);
+      lines.push(`【 鑑定書 目次 】`);
+      lines.push(`・序章　鑑定にあたって`);
+      lines.push(`・第一章　${nameA}の魂の設計図・7天体＆サビアンシンボル`);
+      lines.push(`・第二章　${nameB}の魂の設計図・7天体＆サビアンシンボル`);
+      lines.push(`・第三章　シナストリー解析（二人の魂の引き合い）`);
+      lines.push(`・第四章　コンポジットチャート（二人の「第3の生命体」）`);
+      lines.push(`・第五章　2026年〜2028年 未来の節目・転換期ロードマップ`);
+      lines.push(`・結び　お二人の輝かしい未来へ寄せて`);
+      lines.push(``);
+      lines.push(`───────────────────────────────────────`);
+      lines.push(`■ 序章：鑑定にあたって`);
+      lines.push(`───────────────────────────────────────`);
+      lines.push(resA.introMessage);
+      lines.push(``);
+
+      // 第一章
+      lines.push(`═══════════════════════════════════════`);
+      lines.push(`■ 第一章：${nameA}の魂の設計図・7天体＆サビアンシンボル`);
+      lines.push(`═══════════════════════════════════════`);
+      lines.push(`【 ${nameA}が持つ魂の本質と輝き 】`);
+      lines.push(resA.soulEssence);
+      lines.push(``);
+      (resA.planets || []).forEach(p => {
+        lines.push(`◆ ${p.planetName}`);
+        lines.push(`　配置：${p.signAndSabian}`);
+        lines.push(`${p.interpretation}`);
+        lines.push(``);
+      });
+
+      // 第二章
+      lines.push(`═══════════════════════════════════════`);
+      lines.push(`■ 第二章：${nameB}の魂の設計図・7天体＆サビアンシンボル`);
+      lines.push(`═══════════════════════════════════════`);
+      lines.push(`【 ${nameB}が持つ魂の本質と輝き 】`);
+      lines.push(resB.soulEssence);
+      lines.push(``);
+      (resB.planets || []).forEach(p => {
+        lines.push(`◆ ${p.planetName}`);
+        lines.push(`　配置：${p.signAndSabian}`);
+        lines.push(`${p.interpretation}`);
+        lines.push(``);
+      });
+
+      // 第三章
+      lines.push(`═══════════════════════════════════════`);
+      lines.push(`■ 第三章：シナストリー解析（二人の魂の引き合い）`);
+      lines.push(`═══════════════════════════════════════`);
+      lines.push(`【 お二人が惹かれ合う理由と相性の全体像 】`);
+      lines.push(resSynComp.synastryOverview);
+      lines.push(``);
+      (resSynComp.aspectsDetail || []).forEach((asp, idx) => {
+        lines.push(`✦ 相性ポイント ${idx + 1}：${asp.aspectTitle}`);
+        lines.push(`${asp.meaning}`);
+        lines.push(``);
+      });
+
+      // 第四章
+      lines.push(`═══════════════════════════════════════`);
+      lines.push(`■ 第四章：コンポジットチャート（二人の「第3の生命体」）`);
+      lines.push(`═══════════════════════════════════════`);
+      lines.push(`【 二人が一つの「生命体」として歩む共通の使命 】`);
+      lines.push(resSynComp.compositeOverview);
+      lines.push(``);
+      (resSynComp.compositePlanets || []).forEach(cp => {
+        lines.push(`◈ ${cp.planetTitle}`);
+        lines.push(`${cp.sabianAndRole}`);
+        lines.push(``);
+      });
+
+      // 第五章
+      lines.push(`═══════════════════════════════════════`);
+      lines.push(`■ 第五章：2026年〜2028年 未来の節目・転換期ロードマップ`);
+      lines.push(`═══════════════════════════════════════`);
+      lines.push(`【 これから訪れる3年間の全体テーマ 】`);
+      lines.push(resFuture.futureOverview);
+      lines.push(``);
+      lines.push(`▼ 2026年：拡大の扉と新しい風の到来`);
+      lines.push(resFuture.year2026);
+      lines.push(``);
+      lines.push(`▼ 2027年：愛の試練を越え、揺るぎない基盤へ`);
+      lines.push(resFuture.year2027);
+      lines.push(``);
+      lines.push(`▼ 2028年：調和と実り、さらなる飛躍のステージ`);
+      lines.push(resFuture.year2028);
+      lines.push(``);
+
+      // 結び
+      lines.push(`═══════════════════════════════════════`);
+      lines.push(`■ 結び：お二人の輝かしい未来へ寄せて`);
+      lines.push(`═══════════════════════════════════════`);
+      lines.push(resFuture.closingBlessing);
+      lines.push(``);
+      lines.push(`───────────────────────────────────────`);
+      lines.push(brand.closingSign);
+      lines.push(`───────────────────────────────────────`);
+
+      return lines.join('\n');
+    }
+
+    // 全文ワンクリックコピー（iFrame制限対応の execCommand('copy') 使用）
+    function copyAllText() {
+      const editor = document.getElementById('result-editor');
+      const text = editor.value.trim();
+      if (!text) {
+        showToast('先に鑑定書を生成してください', true);
+        return;
+      }
+      editor.select();
+      editor.setSelectionRange(0, 999999);
+      try {
+        document.execCommand('copy');
+        showToast('鑑定書の全文をコピーしました！そのまま貼り付けできます');
+      } catch (err) {
+        showToast('コピーに失敗しました', true);
+      }
+      window.getSelection().removeAllRanges();
+    }
+
+    // テキストファイル（.txt）ダウンロード機能
+    function downloadTxtFile() {
+      const text = document.getElementById('result-editor').value.trim();
+      if (!text) {
+        showToast('先に鑑定書を生成してください', true);
+        return;
+      }
+      const brandKey = document.getElementById('brand-select').value;
+      const brandName = BRAND_CONFIG[brandKey].name;
+      const nameA = document.getElementById('name-a-input').value.trim() || 'お相手A様';
+      const nameB = document.getElementById('name-b-input').value.trim() || 'お相手B様';
+
+      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ホロスコープ鑑定書_${nameA}_${nameB}（${brandName}）.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('テキストファイル（.txt）を保存しました');
+    }
+  </script>
+</body>
+</html>
